@@ -336,7 +336,6 @@ class PyAudioSource(AudioSource):
         return self._audio_stream is not None
 
     def open(self):
-        print("input_device_index", self.input_device_index)
         self._audio_stream = self._pyaudio_object.open(format=self._pyaudio_format,
                                                        channels=self.channels,
                                                        rate=self.sampling_rate,
