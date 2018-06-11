@@ -321,10 +321,13 @@ class PyAudioSource(AudioSource):
     def __init__(self, sampling_rate=DEFAULT_SAMPLE_RATE,
                  sample_width=DEFAULT_SAMPLE_WIDTH,
                  channels=DEFAULT_NB_CHANNELS,
-                 frames_per_buffer=1024):
+                 frames_per_buffer=2048, 
+                 input_device_index = 0):        
+
 
         AudioSource.__init__(self, sampling_rate, sample_width, channels)
         self._chunk_size = frames_per_buffer
+        self.input_device_index = input_device_index
 
         import pyaudio
         self._pyaudio_object = pyaudio.PyAudio()
@@ -335,11 +338,13 @@ class PyAudioSource(AudioSource):
         return self._audio_stream is not None
 
     def open(self):
+        print("input_device_index", self.input_device_index)
         self._audio_stream = self._pyaudio_object.open(format=self._pyaudio_format,
                                                        channels=self.channels,
                                                        rate=self.sampling_rate,
                                                        input=True,
                                                        output=False,
+                                                       input_device_index = self.input_device_index,
                                                        frames_per_buffer=self._chunk_size)
 
     def close(self):
@@ -348,12 +353,12 @@ class PyAudioSource(AudioSource):
             self._audio_stream.close()
             self._audio_stream = None
 
-    def read(self, size):
+    def read(self, size, exception_on_overflow=False):
         if self._audio_stream is None:
             raise IOError("Stream is not open")
 
         if self._audio_stream.is_active():
-            data = self._audio_stream.read(size)
+            data = self._audio_stream.read(size, exception_on_overflow)
             if data is None or len(data) < 1:
                 return None
             return data
